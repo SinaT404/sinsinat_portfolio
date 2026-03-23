@@ -9,24 +9,76 @@ export const Contact = () => {
     message: "",
   });
 
-  const handleSubmit = (e) => {
+  //  Send message to Telegram bot
+  const sendToTelegram = async (data) => {
+    const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+    const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+
+    const text = `New contact message:\nName: ${data.name}\nEmail: ${data.email}\nMessage: ${data.message}`;
+
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: text,
+        }),
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  };
+
+  // Handle form submission and send email using EmailJS
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    emailjs
-      .sendForm(
+    try {
+      // send email
+      await emailjs.sendForm(
         import.meta.env.VITE_SERVICE_ID,
         import.meta.env.VITE_TEMPLATE_ID,
         e.target,
         import.meta.env.VITE_PUBLIC_KEY,
-      )
-      .then(() => {
-        alert("Message sen!");
-        setFormData({ name: "", email: "", message: "" });
-      })
-      .catch(() =>
-        alert("Oops, something went wrong. Please try again later."),
       );
+
+      // send telegram
+      await sendToTelegram(formData);
+
+      alert("Message sent successfully! ✅");
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Oops, something went wrong. ❌");
+    }
   };
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+
+  //   emailjs
+  //     .sendForm(
+  //       import.meta.env.VITE_SERVICE_ID,
+  //       import.meta.env.VITE_TEMPLATE_ID,
+  //       e.target,
+  //       import.meta.env.VITE_PUBLIC_KEY,
+  //     )
+  //     .then(() => {
+  //       alert("Message sen!");
+  //       setFormData({ name: "", email: "", message: "" });
+  //     })
+  //     .catch(() =>
+  //       alert("Oops, something went wrong. Please try again later."),
+  //     );
+  // };
 
   return (
     // <section
